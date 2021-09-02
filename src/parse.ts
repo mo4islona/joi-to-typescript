@@ -1,5 +1,5 @@
 import { filterMap, toStringLiteral } from './utils';
-import { TypeContent, makeTypeContentRoot, makeTypeContentChild, Settings, JsDoc } from './types';
+import { JsDoc, makeTypeContentChild, makeTypeContentRoot, Settings, TypeContent } from './types';
 import {
   AlternativesDescribe,
   ArrayDescribe,
@@ -48,7 +48,7 @@ export function getAllCustomTypes(parsedSchema: TypeContent): string[] {
  * @param indentLevel how many indent levels
  */
 function getIndentStr(settings: Settings, indentLevel: number): string {
-  return settings.indentationChacters.repeat(indentLevel);
+  return settings.indentationCharacters.repeat(indentLevel);
 }
 
 /**
@@ -172,9 +172,10 @@ export function typeContentToTs(settings: Settings, parsedSchema: TypeContent, d
 /**
  * Parses a joi schema into a TypeContent
  * @param details: the joi schema
- * @param Settings: settings used for parsing
+ * @param settings
  * @param useLabels if true and if a schema has a label we won't parse it and instead just reference the label in the outputted type
  * @param ignoreLabels a list a label to ignore if found. Sometimes nested joi schemas will inherit the parents label so we want to ignore that
+ * @param rootSchema
  */
 export function parseSchema(
   details: Describe,
@@ -307,10 +308,9 @@ function createAllowTypes(details: BaseDescribe): TypeContent[] {
 
   // at least one value
   if (values && values.length !== 0) {
-    const allowedValues = values.map((value: unknown) =>
+    return values.map((value: unknown) =>
       makeTypeContentChild({ content: typeof value === 'string' ? toStringLiteral(value) : `${value}` })
     );
-    return allowedValues;
   }
 
   return [];

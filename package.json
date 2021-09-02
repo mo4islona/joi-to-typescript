@@ -29,6 +29,8 @@
     "pub": "tsc && yarn publish"
   },
   "dependencies": {
+    "@types/glob": "^7.1.4",
+    "glob": "^7.1.7",
     "joi": "^17.4.0"
   },
   "devDependencies": {
