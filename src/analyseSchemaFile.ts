@@ -1,18 +1,17 @@
 import Joi, { AnySchema } from 'joi';
-import Path from 'path';
+import path from 'path';
 
-import { Settings, ConvertedType, GenerateTypeFile } from './types';
-import { getTypeFileNameFromSchema } from './index';
-import { getAllCustomTypes, parseSchema, typeContentToTs } from './parse';
+import { ConvertedType, GenerateTypeFile, InternalSchema, Settings } from './types';
 import { Describe } from './joiDescribeTypes';
 import { ensureInterfaceorTypeName, getInterfaceOrTypeName } from './joiUtils';
+import { getAllCustomTypes, parseSchema, typeContentToTs } from './parse';
 
 export function convertSchemaInternal(
   settings: Settings,
   joi: AnySchema,
   exportedName?: string,
   rootSchema?: boolean
-): ConvertedType | undefined {
+): InternalSchema | undefined {
   const details = joi.describe() as Describe;
 
   const interfaceOrTypeName = getInterfaceOrTypeName(settings, details) || exportedName;
@@ -63,45 +62,37 @@ export function convertSchemaInternal(
 }
 /**
  * Analyse a schema file
- *
- * @param settings - Settings
- * @param schemaFileName - Schema File Name
  * @returns Schema analysis results
  */
 export async function analyseSchemaFile(
-  settings: Settings,
-  schemaFileName: string
+  sourceFilePath: string,
+  settings: Settings
 ): Promise<undefined | GenerateTypeFile> {
   const allConvertedTypes: ConvertedType[] = [];
+  const schemaFile = await require(sourceFilePath);
 
-  const fullFilePath = Path.resolve(Path.join(settings.schemaDirectory, schemaFileName));
-  const schemaFile = await require(fullFilePath);
-
-  // Create Type File Name
-  const typeFileName = getTypeFileNameFromSchema(schemaFileName, settings);
-  const fullOutputFilePath = Path.join(settings.typeOutputDirectory, typeFileName);
-
+  const exportFilePath = settings.exportFile(path.dirname(sourceFilePath), path.basename(sourceFilePath));
   for (const exportedName in schemaFile) {
     const joiSchema = schemaFile[exportedName];
-
     if (!Joi.isSchema(joiSchema)) {
       continue;
     }
+
     const convertedType = convertSchemaInternal(settings, joiSchema, exportedName, true);
     if (convertedType) {
-      allConvertedTypes.push({ ...convertedType, location: fullOutputFilePath });
+      allConvertedTypes.push({ ...convertedType, exportFilePath, sourceFilePath });
     }
   }
 
   if (allConvertedTypes.length === 0) {
     if (settings.debug) {
-      console.debug(`${schemaFileName} - Skipped - no Joi Schemas found`);
+      console.debug(`${sourceFilePath} - Skipped - no Joi Schemas found`);
     }
     return;
   }
 
   if (settings.debug) {
-    console.debug(`${schemaFileName} - Processing`);
+    console.debug(`${sourceFilePath} - Processing`);
   }
 
   // Clean up type list
@@ -125,13 +116,12 @@ export async function analyseSchemaFile(
     }
   }
 
-  const fileContent = `${typeContent.join('\n\n').concat('\n')}`;
+  const exportFileContent = `${typeContent.join('\n\n').concat('\n')}`;
 
   return {
     externalTypes: allExternalTypes,
     internalTypes: typesToBeWritten,
-    fileContent,
-    typeFileName,
-    typeFileLocation: settings.typeOutputDirectory
+    exportFilePath,
+    exportFileContent
   };
 }

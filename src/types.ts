@@ -4,14 +4,14 @@
 export interface Settings {
   /**
    * The input/schema directory
-   * Directory must exist
    */
-  readonly schemaDirectory: string;
+  readonly schemaFile: string | string[];
+
   /**
    * The output/type directory
    * Will also attempt to create this directory
    */
-  readonly typeOutputDirectory: string;
+  readonly exportFile: (srcPath: string, fileName: string) => string;
   /**
    * Use .label('InterfaceName') instead of .meta({className:'InterfaceName'}) for interface names
    */
@@ -21,12 +21,7 @@ export interface Settings {
    * @default false
    */
   readonly defaultToRequired: boolean;
-  /**
-   * What schema file name suffix will be removed when creating the interface file name
-   * @default "Schema"
-   * This ensures that an interface and Schema with the file name are not confused
-   */
-  readonly schemaFileSuffix: string;
+
   /**
    * If `true` the console will include more information
    * @default false
@@ -41,14 +36,7 @@ export interface Settings {
    * @default true
    */
   readonly sortPropertiesByName: boolean;
-  /**
-   * If true will not output to subDirectories in output/interface directory. It will flatten the structure.
-   */
-  readonly flattenTree: boolean;
-  /**
-   * If true will only read the files in the root directory of the input/schema directory. Will not parse through sub-directories.
-   */
-  readonly rootDirectoryOnly: boolean;
+
   /**
    * If true will write all exports *'s to root index.ts in output/interface directory.
    */
@@ -58,25 +46,23 @@ export interface Settings {
    * @default false
    */
   readonly commentEverything: boolean;
-  /**
-   * List of files or folders that should be ignored from conversion. These can either be
-   * filenames (AddressSchema.ts) or filepaths postfixed with a / (addressSchemas/)
-   * @default []
-   */
-  readonly ignoreFiles: string[];
+
   /**
    * The indentation characters
    * @default '  ' (two spaces)
    */
-  readonly indentationChacters: string;
+  readonly indentationCharacters: string;
 }
 
 export interface ConvertedType {
   interfaceOrTypeName: string;
   content: string;
   customTypes: string[];
-  location?: string;
+  sourceFilePath: string;
+  exportFilePath: string;
 }
+
+export type InternalSchema = Omit<ConvertedType, 'sourceFilePath' | 'exportFilePath'>;
 
 export interface BaseTypeContent {
   /**
@@ -167,25 +153,6 @@ export function makeTypeContentRoot({
  */
 export type TypeContent = TypeContentRoot | TypeContentChild;
 
-export interface Property {
-  /**
-   * The object key this schema was stored under
-   */
-  name: string;
-  /**
-   * number, string literals, Joi.label, etc
-   */
-  type: string;
-  /**
-   * Other schemas referenced in this schema
-   */
-  customTypes?: string[];
-  /**
-   * The typescript result
-   */
-  content: string;
-}
-
 export interface GenerateTypeFile {
   /**
    * External Types required by File
@@ -196,29 +163,13 @@ export interface GenerateTypeFile {
    */
   internalTypes: ConvertedType[];
   /**
+   * File path of file exported.
+   */
+  exportFilePath: string;
+  /**
    * Contents of file exported.
    */
-  fileContent: string;
-  /**
-   * File Name of file exported.
-   */
-  typeFileName: string;
-
-  /**
-   * File Location of where file is exported.
-   */
-  typeFileLocation: string;
-}
-
-export interface GenerateTypesDir {
-  /**
-   * Types generated in Directory/SubDirectory
-   */
-  types: GenerateTypeFile[];
-  /**
-   * FileNames of files exported.
-   */
-  typeFileNames: string[];
+  exportFileContent: string;
 }
 
 export interface JsDoc {

@@ -1,11 +1,12 @@
 import { existsSync, readFileSync, rmdirSync } from 'fs';
 
-import { convertFromDirectory } from '../../index';
+import { convert } from '../../index';
 import { AssertionCriteria } from './AssertionCriteria';
 
 describe('subDirectories', () => {
-  const typeOutputDirectory = './src/__tests__/subDirectories/interfaces';
-  const schemaDirectory = './src/__tests__/subDirectories/schemas';
+  const schemaFile = './src/__tests__/subDirectories/interfaces';
+  const exportFile = (srcPath: string, fileName: string) => `${srcPath.replace('interfaces', 'schemas')}/${fileName}`;
+  const typeOutputDirectory = './src/__tests__/subDirectories/schemas';
 
   beforeEach(() => {
     if (existsSync(typeOutputDirectory)) {
@@ -14,9 +15,9 @@ describe('subDirectories', () => {
   });
 
   test('Sub-Directory - Defaults [Tree]', async () => {
-    const result = await convertFromDirectory({
-      schemaDirectory,
-      typeOutputDirectory
+    const result = await convert({
+      schemaFile,
+      exportFile
     });
 
     expect(result).toBe(true);
@@ -43,8 +44,8 @@ describe('subDirectories', () => {
       rmdirSync(typeOutputDirectory, { recursive: true });
     }
     const result = await convertFromDirectory({
-      schemaDirectory,
-      typeOutputDirectory,
+      schemaFile,
+      exportFile,
       flattenTree: true
     });
 

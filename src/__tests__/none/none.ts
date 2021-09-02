@@ -1,23 +1,23 @@
-import { existsSync, rmdirSync } from 'fs';
-import { convertFromDirectory } from '../../index';
+import { existsSync } from 'fs';
+import { convert } from '../../index';
+import { removeFilesByPattern } from '../../utils';
+import path from 'path';
+
+const basePath = path.join(__dirname, 'schemas');
 
 describe('no schemas in directory', () => {
-  const typeOutputDirectory = './src/__tests__/none/interfaces';
-
-  beforeEach(() => {
-    if (existsSync(typeOutputDirectory)) {
-      rmdirSync(typeOutputDirectory, { recursive: true });
-    }
+  beforeEach(async () => {
+    await removeFilesByPattern(`${basePath}/*.type.ts`);
   });
 
-  test('Throw and no index file', async () => {
+  test('Throw and no index file', () => {
     expect(async () => {
-      await convertFromDirectory({
-        schemaDirectory: './src/__tests__/none/schemas',
-        typeOutputDirectory
+      await convert({
+        schemaFile: `${basePath}/*.ts`,
+        exportFile: srcPath => `${srcPath}/index.ts`
       });
     }).rejects.toThrowError();
 
-    expect(existsSync(`${typeOutputDirectory}/index.ts`)).toBeFalsy();
+    expect(existsSync(`${basePath}/index.ts`)).toBeFalsy();
   });
 });

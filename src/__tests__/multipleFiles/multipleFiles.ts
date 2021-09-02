@@ -1,25 +1,24 @@
-import { existsSync, readFileSync, rmdirSync } from 'fs';
+import { readFileSync } from 'fs';
 
-import { convertFromDirectory } from '../../index';
+import { convert } from '../../index';
+import { removeFilesByPattern } from '../../utils';
+import path from 'path';
 
-const typeOutputDirectory = './src/__tests__/multipleFiles/interfaces';
+const basePath = path.join(__dirname, 'schemas');
 
 describe('can files reference interfaces between schema files', () => {
   beforeEach(() => {
-    if (existsSync(typeOutputDirectory)) {
-      rmdirSync(typeOutputDirectory, { recursive: true });
-    }
+    removeFilesByPattern(`${basePath}/*.type.ts`);
   });
 
   test('multipleFiles', async () => {
-    const result = await convertFromDirectory({
-      schemaDirectory: './src/__tests__/multipleFiles/schemas',
-      typeOutputDirectory
+    const result = await convert({
+      schemaFile: `${basePath}/*.ts`
     });
 
     expect(result).toBe(true);
 
-    const oneContent = readFileSync(`${typeOutputDirectory}/One.ts`).toString();
+    const oneContent = readFileSync(`${basePath}/One.type.ts`).toString();
 
     expect(oneContent).toBe(
       `/**
