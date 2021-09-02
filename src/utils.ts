@@ -1,3 +1,7 @@
+import fs from 'fs';
+import { promisify } from 'util';
+import glob from 'glob';
+
 /**
  * Applies the mapper over each element in the list.
  * If the mapper returns undefined it will not show up in the result
@@ -22,3 +26,19 @@ export function filterMap<T, K>(list: T[], mapper: (t: T) => K | undefined): K[]
 export function toStringLiteral(value: string): string {
   return `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
 }
+
+/**
+ * Promise-based glob version
+ */
+export const globAsync = promisify(glob);
+
+/**
+ * Delete all files by pattern
+ */
+export const removeFilesByPattern = async (pattern: string): Promise<void> => {
+  const files = await globAsync(pattern);
+
+  await Promise.all(files.map(file => fs.promises.unlink(file)));
+
+  return;
+};

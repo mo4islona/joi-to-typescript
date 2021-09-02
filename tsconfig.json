@@ -1,4 +1,10 @@
 {
+  "ts-node": {
+    "files": true
+  },
+  "files": [
+    "src/index.d.ts"
+  ],
   "compilerOptions": {
     "target": "ES2019",
     "module": "commonjs",
@@ -7,7 +13,7 @@
     "declarationMap": true,
     "noImplicitReturns": true,
     "noImplicitThis": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "esModuleInterop": true,
     "strict": true,
     "baseUrl": "src"
